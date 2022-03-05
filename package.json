@@ -1,0 +1,11 @@
+{
+  "name": "jeopardy-trainer",
+  "version": "1.0.0",
+  "description": "A tool to help with training for Jeopardy\u001b[D\u001b[C\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Cthe game show Jeopardy",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
