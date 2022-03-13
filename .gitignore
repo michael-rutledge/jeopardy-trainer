@@ -1,11 +1,7 @@
-# Asset binary files (be it fonts, audio, or images) that are not integral to
-# the functioning of the game and could possibly be copyright infringing.
-client/assets/
-
-# Compiled with the browserify library automatically on certain npm run
-# commands. See package.json for those commands.
-client/js/bundle.js
-
 # Node dependencies. These would take up way too much unnecessary space on the
 # repo. Run npm install to get dependencies.
 node_modules/
+
+# Where any DBs or local data of the trainer should be stored. This should be
+# different for all potential users, so is not included in the repo.
+server/data/

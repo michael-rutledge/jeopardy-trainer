@@ -4,8 +4,23 @@
   "description": "A tool to help with training for Jeopardy\u001b[D\u001b[C\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Cthe game show Jeopardy",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "clean_info": "node app.js debug:info",
+    "questionScrape": "node script/PopulateClueBank.js debug:info",
+    "test": "mocha 'test/server/**/*.js' --recursive"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "browserify": "^17.0.0",
+    "colors": "^1.4.0",
+    "mocha": "^9.2.1"
+  },
+  "dependencies": {
+    "axios": "^0.26.1",
+    "inquirer": "^8.2.1",
+    "knex": "^0.95.15",
+    "node-html-parser": "^5.2.0",
+    "request": "^2.88.2",
+    "sqlite3": "^5.0.2"
+  }
 }
