@@ -11,8 +11,8 @@ const Logger = require(process.cwd() + '/server/utility/Logger.js');
 // episodes from showing up, as their questions might out of date.
 //
 // Season 26 Episode 1 (2009-09-14)
-const SEED_EPISODE_LINK = 'https://www.j-archive.com/showgame.php?game_id=3575';
-// 'https://www.j-archive.com/showgame.php?game_id=3135'
+const SEED_EPISODE_LINK = 'https://www.j-archive.com/showgame.php?game_id=3135';
+
 // Episode to stop parsing at exclusively. This means the episode link provided will not be scraped
 // and stored. Optional.
 // Season 27 Episode 1

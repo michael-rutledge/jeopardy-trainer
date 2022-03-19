@@ -7,17 +7,6 @@ const DB_PATH = process.cwd() + '/server/data/jeopardy-trainer.db';
 const CLUES_TABLE = 'clues';
 const RESULTS_TABLE = 'results';
 
-const ClueColumns = {
-  ID: 'id',
-  J_CATEGORY: 'j_category',
-  CLUE: 'clue',
-  ANSWER: 'answer',
-  ROUND: 'round',
-  DOLLAR_VALUE: 'dollar_value',
-  AIR_DATE: 'air_date',
-  TRAINER_CATEGORY: 'trainer_category',
-  CLUE_TYPE: 'clue_type',
-}
 const ResultColumns = {
   ID: 'id',
   TRAINER_CATEGORY: 'trainer_category',
@@ -36,8 +25,12 @@ const knex = require('knex')({
 
 // Manages database storage of jeopardy-trainer clues.
 class TrainerDatabase {
-  constructor () {
-    this.db = this._initDb();
+  constructor (db = null) {
+    if (!db) {
+      this.db = this._initDb();
+    } else {
+      this.db = db;
+    }
   }
 
 
@@ -47,12 +40,12 @@ class TrainerDatabase {
   addClueEntry(clueEntry) {
     try {
       let clueToInsert = {};
-      clueToInsert[ClueColumns.J_CATEGORY] = clueEntry.jCategory;
-      clueToInsert[ClueColumns.CLUE] = clueEntry.clue;
-      clueToInsert[ClueColumns.ANSWER] = clueEntry.answer;
-      clueToInsert[ClueColumns.ROUND] = clueEntry.round;
-      clueToInsert[ClueColumns.DOLLAR_VALUE] = clueEntry.dollarValue;
-      clueToInsert[ClueColumns.AIR_DATE] = clueEntry.airDate;
+      clueToInsert[ClueEntry.SqlColumns.J_CATEGORY] = clueEntry.jCategory;
+      clueToInsert[ClueEntry.SqlColumns.CLUE] = clueEntry.clue;
+      clueToInsert[ClueEntry.SqlColumns.ANSWER] = clueEntry.answer;
+      clueToInsert[ClueEntry.SqlColumns.ROUND] = clueEntry.round;
+      clueToInsert[ClueEntry.SqlColumns.DOLLAR_VALUE] = clueEntry.dollarValue;
+      clueToInsert[ClueEntry.SqlColumns.AIR_DATE] = clueEntry.airDate;
       let query = knex(CLUES_TABLE).insert(clueToInsert).toString();
       this.db.run(query);
     } catch (err) {
@@ -80,15 +73,15 @@ class TrainerDatabase {
       // Create Clues table.
       let cluesQuery = knex.schema
         .createTable(CLUES_TABLE, table => {
-          table.increments(ClueColumns.ID);
-          table.string(ClueColumns.J_CATEGORY);
-          table.string(ClueColumns.CLUE);
-          table.string(ClueColumns.ANSWER);
-          table.string(ClueColumns.ROUND);
-          table.integer(ClueColumns.DOLLAR_VALUE);
-          table.string(ClueColumns.AIR_DATE);
-          table.string(ClueColumns.TRAINER_CATEGORY);
-          table.string(ClueColumns.CLUE_TYPE)
+          table.increments(ClueEntry.SqlColumns.ID);
+          table.string(ClueEntry.SqlColumns.J_CATEGORY);
+          table.string(ClueEntry.SqlColumns.CLUE);
+          table.string(ClueEntry.SqlColumns.ANSWER);
+          table.string(ClueEntry.SqlColumns.ROUND);
+          table.integer(ClueEntry.SqlColumns.DOLLAR_VALUE);
+          table.string(ClueEntry.SqlColumns.AIR_DATE);
+          table.string(ClueEntry.SqlColumns.TRAINER_CATEGORY);
+          table.string(ClueEntry.SqlColumns.CLUE_TYPE);
         }).toString();
       db.run(cluesQuery, (err) => {
         Logger.logWarning('TrainerDatabase: clues table already exists');
@@ -117,4 +110,3 @@ class TrainerDatabase {
 
 module.exports = TrainerDatabase;
 TrainerDatabase.DB_PATH = DB_PATH;
-TrainerDatabase.ClueColumns = ClueColumns;
