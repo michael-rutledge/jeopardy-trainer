@@ -19,22 +19,21 @@ const kValidClueEntry = new ClueEntry.Builder()
 
 describe('TrainerDatabaseTest', function () {
   describe('addClueEntry', function () {
-    it('shouldRunExpectedQuery', function () {
+    it('shouldRunQuery', function () {
       let trainerDb = new TrainerDatabase(new MockDatabase());
 
       trainerDb.addClueEntry(kValidClueEntry);
 
-      trainerDb.db.lastQuery.should.equal('insert into `clues` (`air_date`, `answer`, `clue`, '
-        + '`dollar_value`, `j_category`, `round`) values (\'2009-09-01\', \'answer\', \'clue\', '
-        + '1000, \'jCategory\', \'JEOPARDY\')');
+      trainerDb.db.runQueries.length.should.equal(1);
     });
 
     it('shouldNotRunExpectedQueryOnFailure', function () {
-      let trainerDb = new TrainerDatabase(new MockDatabase(/*shouldThrow=*/true));
+      let trainerDb = new TrainerDatabase(
+        new MockDatabase.Builder().setErrorChain([true]).build());
 
       trainerDb.addClueEntry(kValidClueEntry);
 
-      trainerDb.db.lastQuery.should.be.empty;
+      trainerDb.db.runQueries.should.be.empty;
     });
   });
 
@@ -48,11 +47,67 @@ describe('TrainerDatabaseTest', function () {
     });
 
     it('shouldNotCloseOnFailure', function () {
-      let trainerDb = new TrainerDatabase(new MockDatabase(/*shouldThrow=*/true));
+      let trainerDb = new TrainerDatabase(
+        new MockDatabase.Builder().setErrorChain([true]).build());
 
       trainerDb.close();
 
       trainerDb.db.closed.should.be.false;
+    });
+  });
+
+  describe('getNextUnseenJCategory', function () {
+    it('shouldReturnExpectedClueEntries', function () {
+      // Set expected values for fetching category from db.
+      let categoryResult = {};
+      categoryResult[ClueEntry.SqlColumns.J_CATEGORY] = 'jCategory';
+      categoryResult[ClueEntry.SqlColumns.ROUND] = ClueEntry.Round.JEOPARDY;
+      categoryResult[ClueEntry.SqlColumns.AIR_DATE] = '2009-09-14';
+      // Set expected clue to be found from category.
+      let clueRows = [{}];
+      clueRows[0][ClueEntry.SqlColumns.J_CATEGORY] = 'jCategory';
+      clueRows[0][ClueEntry.SqlColumns.ROUND] = ClueEntry.Round.JEOPARDY;
+      clueRows[0][ClueEntry.SqlColumns.AIR_DATE] = '2009-09-14';
+      clueRows[0][ClueEntry.SqlColumns.CLUE] = 'clue';
+      let mockDb = new MockDatabase.Builder()
+        .setResultChain([categoryResult, clueRows])
+        .setErrorChain([false, false])
+        .build();
+      let trainerDb = new TrainerDatabase(mockDb);
+
+      let clueEntries = trainerDb.getNextUnseenJCategory();
+
+      clueEntries.length.should.equal(1);
+      clueEntries[0].should.deep.equal(ClueEntry.fromSqlRow(clueRows[0]));
+    });
+
+    it('shouldNotReturnCluesOnCategoryFailure', function () {
+      let mockDb = new MockDatabase.Builder()
+        .setResultChain([{}])
+        .setErrorChain([true])
+        .build();
+      let trainerDb = new TrainerDatabase(mockDb);
+
+      let clueEntries = trainerDb.getNextUnseenJCategory();
+
+      clueEntries.should.be.empty;
+    });
+
+    it('shouldNotReturnCluesOnClueFailure', function () {
+      // Set expected values for fetching category from db.
+      let categoryResult = {};
+      categoryResult[ClueEntry.SqlColumns.J_CATEGORY] = 'jCategory';
+      categoryResult[ClueEntry.SqlColumns.ROUND] = ClueEntry.Round.JEOPARDY;
+      categoryResult[ClueEntry.SqlColumns.AIR_DATE] = '2009-09-14';
+      let mockDb = new MockDatabase.Builder()
+        .setResultChain([categoryResult, []])
+        .setErrorChain([false, true])
+        .build();
+      let trainerDb = new TrainerDatabase(mockDb);
+
+      let clueEntries = trainerDb.getNextUnseenJCategory();
+
+      clueEntries.should.be.empty;
     });
   });
 });

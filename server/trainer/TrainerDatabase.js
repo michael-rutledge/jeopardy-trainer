@@ -63,10 +63,47 @@ class TrainerDatabase {
     }
   }
 
+  // Returns all remaining clues left for the next unseen J Category. Preference is given to the
+  // earliest categories chronologically.
+  getNextUnseenJCategory() {
+    let clueEntries = [];
+    let categoryQuery = knex
+      .select(ClueEntry.SqlColumns.J_CATEGORY, ClueEntry.SqlColumns.ROUND,
+        ClueEntry.SqlColumns.AIR_DATE)
+      .from(CLUES_TABLE)
+      .whereNull(ClueEntry.SqlColumns.TRAINER_CATEGORY)
+      .orderBy(ClueEntry.SqlColumns.AIR_DATE)
+      .limit(1)
+      .toString();
+    this.db.get(categoryQuery, (err, row) => {
+      if (err) {
+        Logger.logError('Error when querying for next unseen category: ' + err.message);
+        return;
+      }
+      let categoryCluesQuery = knex
+        .select()
+        .from(CLUES_TABLE)
+        .where(ClueEntry.SqlColumns.J_CATEGORY, row[ClueEntry.SqlColumns.J_CATEGORY])
+        .where(ClueEntry.SqlColumns.ROUND, row[ClueEntry.SqlColumns.ROUND])
+        .where(ClueEntry.SqlColumns.AIR_DATE, row[ClueEntry.SqlColumns.AIR_DATE])
+        .toString();
+      this.db.all(categoryCluesQuery, (err, rows) => {
+        if (err) {
+          Logger.logError('Error when querying for next unseen category clues: ' + err.message);
+          return;
+        }
+        for (let i = 0; i < rows.length; ++i) {
+          clueEntries.push(ClueEntry.fromSqlRow(rows[i]));
+        }
+      });
+    });
+    return clueEntries;
+  }
+
 
   // PRIVATE METHODS
 
-  //
+  // Initializes the sql db accessor.
   _initDb() {
     try {
       let db = new sqlite3.Database(DB_PATH, sqlite3.OPEN_READWRITE);
