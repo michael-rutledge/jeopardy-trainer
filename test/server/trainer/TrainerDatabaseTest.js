@@ -110,4 +110,64 @@ describe('TrainerDatabaseTest', function () {
       clueEntries.should.be.empty;
     });
   });
+
+  describe('getClueEntriesForTrainerCategory', function () {
+    it('shouldReturnExpectedClueEntries', function () {
+      let clueRows = [{}];
+      clueRows[0][ClueEntry.SqlColumns.TRAINER_CATEGORY] = 'trainerCategory';
+      clueRows[0][ClueEntry.SqlColumns.ROUND] = ClueEntry.Round.JEOPARDY;
+      clueRows[0][ClueEntry.SqlColumns.AIR_DATE] = '2009-09-14';
+      clueRows[0][ClueEntry.SqlColumns.CLUE] = 'clue';
+      let mockDb = new MockDatabase.Builder()
+        .setResultChain([clueRows])
+        .setErrorChain([false])
+        .build();
+      let trainerDb = new TrainerDatabase(mockDb);
+
+      let clueEntries = trainerDb.getClueEntriesForTrainerCategory('trainerCategory');
+
+      clueEntries.length.should.equal(1);
+      clueEntries[0].should.deep.equal(ClueEntry.fromSqlRow(clueRows[0]));
+    });
+
+    it('shouldSetExpectedLimitInQuery', function () {
+      let mockDb = new MockDatabase.Builder()
+        .setResultChain([[]])
+        .setErrorChain([false])
+        .build();
+        let trainerDb = new TrainerDatabase(mockDb);
+
+      let clueEntries = trainerDb.getClueEntriesForTrainerCategory(
+        'trainerCategory', { limit: 10 });
+
+      mockDb.runQueries.length.should.equal(1);
+      mockDb.runQueries[0].should.contain('limit 10');
+    });
+
+    it('shouldSetExpectedOffsetInQuery', function () {
+      let mockDb = new MockDatabase.Builder()
+        .setResultChain([[]])
+        .setErrorChain([false])
+        .build();
+        let trainerDb = new TrainerDatabase(mockDb);
+
+      let clueEntries = trainerDb.getClueEntriesForTrainerCategory(
+        'trainerCategory', { offset: 10 });
+
+      mockDb.runQueries.length.should.equal(1);
+      mockDb.runQueries[0].should.contain('offset 10');
+    });
+
+    it('shouldNotReturnCluesOnFailure', function () {
+      let mockDb = new MockDatabase.Builder()
+        .setResultChain([[]])
+        .setErrorChain([true])
+        .build();
+      let trainerDb = new TrainerDatabase(mockDb);
+
+      let clueEntries = trainerDb.getNextUnseenJCategory();
+
+      clueEntries.should.be.empty;
+    });
+  });
 });

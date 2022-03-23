@@ -63,6 +63,31 @@ class TrainerDatabase {
     }
   }
 
+  // Returns clues associated with the given trainerCategory.
+  getClueEntriesForTrainerCategory(trainerCategory, pagination = { limit: 0, offset: 0 }) {
+    let clueEntries = [];
+    let cluesQuery = knex
+      .select()
+      .from(CLUES_TABLE)
+      .where(ClueEntry.SqlColumns.TRAINER_CATEGORY, trainerCategory);
+    if (pagination.limit > 0) {
+      cluesQuery.limit(pagination.limit);
+    }
+    if (pagination.offset > 0) {
+      cluesQuery.offset(pagination.offset);
+    }
+    this.db.all(cluesQuery.toString(), (err, rows) => {
+      if (err) {
+        Logger.logError('Error when querying for trainer category clues: ' + err.message);
+        return;
+      }
+      for (let i = 0; i < rows.length; ++i) {
+        clueEntries.push(ClueEntry.fromSqlRow(rows[i]));
+      }
+    });
+    return clueEntries;
+  }
+
   // Returns all remaining clues left for the next unseen J Category. Preference is given to the
   // earliest categories chronologically.
   getNextUnseenJCategory() {
