@@ -4,6 +4,7 @@
   "description": "A tool to help with training for Jeopardy\u001b[D\u001b[C\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Cthe game show Jeopardy",
   "main": "app.js",
   "scripts": {
+    "clean_console": "node app.js debug:console",
     "clean_info": "node app.js debug:info",
     "questionScrape": "node script/PopulateClueBank.js debug:info",
     "test": "mocha 'test/server/**/*.js' --recursive"
