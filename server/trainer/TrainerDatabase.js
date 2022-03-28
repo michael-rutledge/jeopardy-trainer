@@ -1,4 +1,4 @@
-const sqlite3 = require('sqlite3').verbose();
+const sqlite3 = require('better-sqlite3');
 
 const ClueEntry = require(process.cwd() + '/server/trainer/ClueEntry.js');
 const Logger = require(process.cwd() + '/server/utility/Logger.js');
@@ -70,58 +70,56 @@ class TrainerDatabase {
       .select()
       .from(CLUES_TABLE)
       .where(ClueEntry.SqlColumns.TRAINER_CATEGORY, trainerCategory);
+
     if (pagination.limit > 0) {
       cluesQuery.limit(pagination.limit);
     }
     if (pagination.offset > 0) {
       cluesQuery.offset(pagination.offset);
     }
-    this.db.all(cluesQuery.toString(), (err, rows) => {
-      if (err) {
-        Logger.logError('Error when querying for trainer category clues: ' + err.message);
-        return;
+
+    try {
+      let clueRows = this.db.prepare(cluesQuery.toString()).all();
+      for (let i = 0; clueRows && i < clueRows.length; ++i) {
+        clueEntries.push(ClueEntry.fromSqlRow(clueRows[i]));
       }
-      for (let i = 0; i < rows.length; ++i) {
-        clueEntries.push(ClueEntry.fromSqlRow(rows[i]));
-      }
-    });
+    } catch (err) {
+      Logger.logError(`getClueEntriesForTrainerCategory error: ${err.message}`);
+    }
     return clueEntries;
   }
 
   // Returns all remaining clues left for the next unseen J Category. Preference is given to the
   // earliest categories chronologically.
-  getNextUnseenJCategory() {
+  getNextUnseenJCategory(resolve) {
     let clueEntries = [];
-    let categoryQuery = knex
-      .select(ClueEntry.SqlColumns.J_CATEGORY, ClueEntry.SqlColumns.ROUND,
-        ClueEntry.SqlColumns.AIR_DATE)
-      .from(CLUES_TABLE)
-      .whereNull(ClueEntry.SqlColumns.TRAINER_CATEGORY)
-      .orderBy(ClueEntry.SqlColumns.AIR_DATE)
-      .limit(1)
-      .toString();
-    this.db.get(categoryQuery, (err, row) => {
-      if (err) {
-        Logger.logError('Error when querying for next unseen category: ' + err.message);
-        return;
-      }
-      let categoryCluesQuery = knex
-        .select()
+
+    try {
+      let categoryQuery = knex
+        .select(ClueEntry.SqlColumns.J_CATEGORY, ClueEntry.SqlColumns.ROUND,
+          ClueEntry.SqlColumns.AIR_DATE)
         .from(CLUES_TABLE)
-        .where(ClueEntry.SqlColumns.J_CATEGORY, row[ClueEntry.SqlColumns.J_CATEGORY])
-        .where(ClueEntry.SqlColumns.ROUND, row[ClueEntry.SqlColumns.ROUND])
-        .where(ClueEntry.SqlColumns.AIR_DATE, row[ClueEntry.SqlColumns.AIR_DATE])
+        .whereNull(ClueEntry.SqlColumns.TRAINER_CATEGORY)
+        .orderBy(ClueEntry.SqlColumns.AIR_DATE)
+        .limit(1)
         .toString();
-      this.db.all(categoryCluesQuery, (err, rows) => {
-        if (err) {
-          Logger.logError('Error when querying for next unseen category clues: ' + err.message);
-          return;
-        }
-        for (let i = 0; i < rows.length; ++i) {
-          clueEntries.push(ClueEntry.fromSqlRow(rows[i]));
-        }
-      });
-    });
+      let category = this.db.prepare(categoryQuery).get();
+      if (!category) return [];
+      let categoryCluesQuery = knex
+          .select()
+          .from(CLUES_TABLE)
+          .where(ClueEntry.SqlColumns.J_CATEGORY, category[ClueEntry.SqlColumns.J_CATEGORY])
+          .where(ClueEntry.SqlColumns.ROUND, category[ClueEntry.SqlColumns.ROUND])
+          .where(ClueEntry.SqlColumns.AIR_DATE, category[ClueEntry.SqlColumns.AIR_DATE])
+          .toString();
+      let clueRows = this.db.prepare(categoryCluesQuery).all();
+      for (let i = 0; clueRows && i < clueRows.length; ++i) {
+        clueEntries.push(ClueEntry.fromSqlRow(clueRows[i]));
+      }
+    } catch (err) {
+      Logger.logError(`getNextUnseenJCategory error: ${err.message}`);
+    }
+
     return clueEntries;
   }
 
@@ -130,43 +128,47 @@ class TrainerDatabase {
 
   // Initializes the sql db accessor.
   _initDb() {
+    let db = null;
     try {
-      let db = new sqlite3.Database(DB_PATH, sqlite3.OPEN_READWRITE);
-      // Create Clues table.
-      let cluesQuery = knex.schema
-        .createTable(CLUES_TABLE, table => {
-          table.increments(ClueEntry.SqlColumns.ID);
-          table.string(ClueEntry.SqlColumns.J_CATEGORY);
-          table.string(ClueEntry.SqlColumns.CLUE);
-          table.string(ClueEntry.SqlColumns.ANSWER);
-          table.string(ClueEntry.SqlColumns.ROUND);
-          table.integer(ClueEntry.SqlColumns.DOLLAR_VALUE);
-          table.string(ClueEntry.SqlColumns.AIR_DATE);
-          table.string(ClueEntry.SqlColumns.TRAINER_CATEGORY);
-          table.string(ClueEntry.SqlColumns.CLUE_TYPE);
-        }).toString();
-      db.run(cluesQuery, (err) => {
-        Logger.logWarning('TrainerDatabase: clues table already exists');
-      });
+      db = new sqlite3(DB_PATH, sqlite3.OPEN_READWRITE);
 
-      // Create Results table.
-      let resultsQuery = knex.schema
-        .createTable(CLUES_TABLE, table => {
-          table.increments(ResultColumns.ID);
-          table.string(ResultColumns.TRAINER_CATEGORY);
-          table.integer(ResultColumns.CORRECT);
-          table.integer(ResultColumns.HEARD_OF);
-          table.string(ResultColumns.DATE);
-        }).toString();
-      db.run(resultsQuery, (err) => {
-        Logger.logWarning('TrainerDatabase: results table already exists');
-      });
+      try {
+        // Create Clues table.
+        let cluesQuery = knex.schema
+          .createTable(CLUES_TABLE, table => {
+            table.increments(ClueEntry.SqlColumns.ID);
+            table.string(ClueEntry.SqlColumns.J_CATEGORY);
+            table.string(ClueEntry.SqlColumns.CLUE);
+            table.string(ClueEntry.SqlColumns.ANSWER);
+            table.string(ClueEntry.SqlColumns.ROUND);
+            table.integer(ClueEntry.SqlColumns.DOLLAR_VALUE);
+            table.string(ClueEntry.SqlColumns.AIR_DATE);
+            table.string(ClueEntry.SqlColumns.TRAINER_CATEGORY);
+            table.string(ClueEntry.SqlColumns.CLUE_TYPE);
+          }).toString();
+        db.prepare(cluesQuery).run();
+      } catch (err) {
+        Logger.logWarning(`Clues table error: ${err.message}`);
+      }
 
-      return db;
+      try {
+        // Create Results table.
+        let resultsQuery = knex.schema
+          .createTable(RESULTS_TABLE, table => {
+            table.increments(ResultColumns.ID);
+            table.string(ResultColumns.TRAINER_CATEGORY);
+            table.integer(ResultColumns.CORRECT);
+            table.integer(ResultColumns.HEARD_OF);
+            table.string(ResultColumns.DATE);
+          }).toString();
+        db.prepare(resultsQuery).run();
+      } catch (err) {
+        Logger.logWarning(`Results table error: ${err.message}`);
+      }
     } catch (err) {
       Logger.logError('TrainerDatabase init error: ' + err.message);
-      return null;
     }
+    return db;
   }
 }
 

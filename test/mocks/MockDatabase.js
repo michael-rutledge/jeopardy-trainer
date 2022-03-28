@@ -10,6 +10,9 @@ class MockDatabase {
     // A chronological list of sql query strings that have been run by the mock db.
     this.runQueries = [];
 
+    // Query prepared by the db to run synchronously.
+    this.preparedQuery = null;
+
     // Whether the mock db is closed.
     this.closed = false;
   }
@@ -18,8 +21,8 @@ class MockDatabase {
   // PUBLIC METHODS
 
   // Mocks a db select query for multiple items.
-  all(query, callback) {
-    this.get(query, callback);
+  all() {
+    return this.get();
   }
 
   // Mocks a db closure.
@@ -29,21 +32,25 @@ class MockDatabase {
   }
 
   // Mocks a db select query for one item.
-  get(query, callback) {
+  get() {
     let err = null;
     if (this.errorChain.shift()) {
-      err = {
-        message: 'get error'
-      };
+      throw new Error('get error');
     }
-    this.runQueries.push(query);
-    callback(err, this.resultChain.shift());
+    this.runQueries.push(this.preparedQuery);
+    return this.resultChain.shift();
+  }
+
+  // Mocks the db preparing a statement to run.
+  prepare(query) {
+    this.preparedQuery = query;
+    return this;
   }
 
   // Mocks a db query being run.
-  run(query) {
+  run() {
     this._maybeThrow(this.errorChain.shift(), 'run error');
-    this.runQueries.push(query);
+    this.runQueries.push(this.preparedQuery);
   }
 
 
@@ -51,7 +58,7 @@ class MockDatabase {
 
   _maybeThrow(shouldThrow, message) {
     if (shouldThrow) {
-      throw message;
+      throw new Error(message);
     }
   }
 }

@@ -5,9 +5,12 @@
   "main": "app.js",
   "scripts": {
     "clean_console": "node app.js debug:console",
+    "clean_warn": "node app.js debug:warn",
+    "clean_error": "node app.js debug:error",
     "clean_info": "node app.js debug:info",
     "questionScrape": "node script/PopulateClueBank.js debug:info",
-    "test": "mocha 'test/server/**/*.js' --recursive"
+    "test": "mocha 'test/server/**/*.js' --recursive",
+    "test_info": "mocha 'test/server/**/*.js' --recursive debug:info"
   },
   "author": "",
   "license": "ISC",
@@ -19,6 +22,7 @@
   },
   "dependencies": {
     "axios": "^0.26.1",
+    "better-sqlite3": "^7.5.0",
     "inquirer": "^8.2.1",
     "knex": "^0.95.15",
     "node-html-parser": "^5.2.0",

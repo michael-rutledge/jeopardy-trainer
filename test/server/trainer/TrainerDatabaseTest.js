@@ -165,7 +165,7 @@ describe('TrainerDatabaseTest', function () {
         .build();
       let trainerDb = new TrainerDatabase(mockDb);
 
-      let clueEntries = trainerDb.getNextUnseenJCategory();
+      let clueEntries = trainerDb.getClueEntriesForTrainerCategory('trainerCategory');
 
       clueEntries.should.be.empty;
     });

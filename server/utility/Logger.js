@@ -25,7 +25,7 @@ const DEBUG_LEVEL = getDebugLevel();
 
 function logConsole(message) {
   if (DEBUG_LEVEL >= CONSOLE) {
-    console.log('CONSOLE: '.geen.bold + message);
+    console.log('CONSOLE: '.green.bold + message);
   }
 }
 
@@ -48,6 +48,7 @@ function logInfo(message) {
 }
 
 // node exports
+module.exports.logConsole = logConsole;
 module.exports.logError = logError;
 module.exports.logWarning = logWarning;
 module.exports.logInfo = logInfo;
