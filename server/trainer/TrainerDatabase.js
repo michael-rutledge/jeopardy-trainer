@@ -1,4 +1,5 @@
 const sqlite3 = require('better-sqlite3');
+const datetime = require('node-datetime');
 
 const ClueEntry = require(process.cwd() + '/server/trainer/ClueEntry.js');
 const Logger = require(process.cwd() + '/server/utility/Logger.js');
@@ -47,9 +48,25 @@ class TrainerDatabase {
       clueToInsert[ClueEntry.SqlColumns.DOLLAR_VALUE] = clueEntry.dollarValue;
       clueToInsert[ClueEntry.SqlColumns.AIR_DATE] = clueEntry.airDate;
       let query = knex(CLUES_TABLE).insert(clueToInsert).toString();
-      this.db.run(query);
+      this.db.prepare(query).run();
     } catch (err) {
       Logger.logError('TrainerDatabase failed to insert clueEntry: ' + err.message);
+    }
+  }
+
+  // Adds a result entry for the given arguments representing how a clue for a particular
+  // trainerCategory went.
+  addResultEntry(trainerCategory, correct, heardOf) {
+    try {
+      let resultToInsert = {};
+      resultToInsert[ResultColumns.TRAINER_CATEGORY] = trainerCategory;
+      resultToInsert[ResultColumns.CORRECT] = correct;
+      resultToInsert[ResultColumns.HEARD_OF] = heardOf;
+      resultToInsert[ResultColumns.DATE] = datetime.create().format('Y-m-d');
+      let query = knex(RESULTS_TABLE).insert(resultToInsert).toString();
+      this.db.prepare(query).run();
+    } catch (err) {
+      Logger.logError(`TrainerDatabase failed to insert result row: ${err.message}`);
     }
   }
 
@@ -121,6 +138,20 @@ class TrainerDatabase {
     }
 
     return clueEntries;
+  }
+
+  // Updates the row 
+  setTrainerCategoryForClueEntry(trainerCategory, clueEntry) {
+    try {
+      let query = knex(CLUES_TABLE)
+        .where(ClueEntry.SqlColumns.ID, clueEntry.id)
+        .update(ClueEntry.SqlColumns.TRAINER_CATEGORY, trainerCategory)
+        .toString();
+      this.db.prepare(query).run();
+    } catch (err) {
+      Logger.logError(
+        `TrainerDatabase failed to set trainerCategory for clueEntry: ${err.message}`);
+    }
   }
 
 

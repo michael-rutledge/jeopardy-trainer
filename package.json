@@ -25,6 +25,7 @@
     "better-sqlite3": "^7.5.0",
     "inquirer": "^8.2.1",
     "knex": "^0.95.15",
+    "node-datetime": "^2.1.2",
     "node-html-parser": "^5.2.0",
     "request": "^2.88.2",
     "sqlite3": "^5.0.2"

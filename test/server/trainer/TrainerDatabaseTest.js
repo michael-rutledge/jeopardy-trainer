@@ -37,6 +37,25 @@ describe('TrainerDatabaseTest', function () {
     });
   });
 
+  describe('addResultEntry', function () {
+    it('shouldRunQuery', function () {
+      let trainerDb = new TrainerDatabase(new MockDatabase());
+
+      trainerDb.addResultEntry('TRAINER_CATEGORY', /*correct=*/true, /*heardOf=*/true);
+
+      trainerDb.db.runQueries.length.should.equal(1);
+    });
+
+    it('shouldNotRunExpectedQueryOnFailure', function () {
+      let trainerDb = new TrainerDatabase(
+        new MockDatabase.Builder().setErrorChain([true]).build());
+
+      trainerDb.addResultEntry('TRAINER_CATEGORY', /*correct=*/true, /*heardOf=*/true);
+
+      trainerDb.db.runQueries.should.be.empty;
+    });
+  });
+
   describe('close', function () {
     it('shouldClose', function () {
       let trainerDb = new TrainerDatabase(new MockDatabase());
@@ -168,6 +187,28 @@ describe('TrainerDatabaseTest', function () {
       let clueEntries = trainerDb.getClueEntriesForTrainerCategory('trainerCategory');
 
       clueEntries.should.be.empty;
+    });
+  });
+
+  describe('setTrainerCategoryForClueEntry', function () {
+    it('shouldRunExpectedQuery', function () {
+      let trainerDb = new TrainerDatabase(new MockDatabase());
+      let clueEntry = new ClueEntry.Builder().setId(1).build();
+
+      trainerDb.setTrainerCategoryForClueEntry('TRAINER_CATEGORY', clueEntry);
+
+      trainerDb.db.runQueries.length.should.equal(1);
+      trainerDb.db.runQueries[0].should.equal(
+        'update `clues` set `trainer_category` = \'TRAINER_CATEGORY\' where `id` = 1');
+    });
+
+    it('shouldNotRunExpectedQueryOnFailure', function () {
+      let trainerDb = new TrainerDatabase(
+        new MockDatabase.Builder().setErrorChain([true]).build());
+
+      trainerDb.addResultEntry('TRAINER_CATEGORY', /*correct=*/true, /*heardOf=*/true);
+
+      trainerDb.db.runQueries.should.be.empty;
     });
   });
 });

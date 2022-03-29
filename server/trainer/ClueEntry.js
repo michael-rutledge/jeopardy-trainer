@@ -29,6 +29,8 @@ const SqlColumns = {
 // Represents a clue from Jeopardy to be stored in the ClueBank of jeopardy-trainer.
 class ClueEntry {
   constructor () {
+    // Id in the sql db. Should only be set from there.
+    this.id = -1;
     // Category as aired on Jeopardy. Example: 'Potent Potables'
     this.jCategory = '';
     // The actual clue text. Example: 'This drink is commonly made from hops.'
@@ -56,6 +58,11 @@ ClueEntry.Builder = class {
 
   build() {
     return this._clueEntry;
+  }
+
+  setId(id) {
+    this._clueEntry.id = id;
+    return this;
   }
 
   setJCategory(jCategory) {
@@ -102,6 +109,7 @@ ClueEntry.Builder = class {
 // Returns a new ClueEntry from the given sql row JSON.
 ClueEntry.fromSqlRow = function(row) {
   return new ClueEntry.Builder()
+    .setId(row[SqlColumns.ID])
     .setJCategory(row[SqlColumns.J_CATEGORY])
     .setClue(row[SqlColumns.CLUE])
     .setAnswer(row[SqlColumns.ANSWER])
