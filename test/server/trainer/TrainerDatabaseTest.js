@@ -75,6 +75,34 @@ describe('TrainerDatabaseTest', function () {
     });
   });
 
+  describe('getActiveTrainerCategories', function () {
+    it('shouldReturnExpectedTrainerCategories', function () {
+      let rows = [{}, {}];
+      rows[0][ClueEntry.SqlColumns.TRAINER_CATEGORY] = 'ARTS::MUSIC';
+      rows[1][ClueEntry.SqlColumns.TRAINER_CATEGORY] = 'ARTS::OPERA';
+      let mockDb = new MockDatabase.Builder()
+        .setResultChain([rows])
+        .setErrorChain([false])
+        .build();
+      let trainerDb = new TrainerDatabase(mockDb);
+
+      let trainerCategories = trainerDb.getActiveTrainerCategories();
+
+      trainerCategories.should.deep.equal(['ARTS::MUSIC', 'ARTS::OPERA']);
+    });
+
+    it('shouldNotReturnTrainerCategoriesOnFailure', function () {
+      let mockDb = new MockDatabase.Builder()
+        .setErrorChain([true])
+        .build();
+      let trainerDb = new TrainerDatabase(mockDb);
+
+      let trainerCategories = trainerDb.getActiveTrainerCategories();
+
+      trainerCategories.should.be.empty;
+    });
+  });
+
   describe('getNextUnseenJCategory', function () {
     it('shouldReturnExpectedClueEntries', function () {
       // Set expected values for fetching category from db.

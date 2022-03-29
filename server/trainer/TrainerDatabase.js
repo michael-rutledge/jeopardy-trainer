@@ -80,6 +80,25 @@ class TrainerDatabase {
     }
   }
 
+  // Returns a list of currently active trainerCategories within the clues table.
+  getActiveTrainerCategories() {
+    let trainerCategories = [];
+
+    try {
+      let query = knex(CLUES_TABLE)
+        .distinct(ClueEntry.SqlColumns.TRAINER_CATEGORY)
+        .toString();
+      let rows = this.db.prepare(query).all();
+      for (let i = 0; i < rows.length; ++i) {
+        trainerCategories.push(rows[i][ClueEntry.SqlColumns.TRAINER_CATEGORY]);
+      }
+    } catch (err) {
+      Logger.logError(`getActiveTrainerCategories error: ${err.message}`);
+    }
+
+    return trainerCategories;
+  }
+
   // Returns clues associated with the given trainerCategory.
   getClueEntriesForTrainerCategory(trainerCategory, pagination = { limit: 0, offset: 0 }) {
     let clueEntries = [];
