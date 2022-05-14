@@ -6,3 +6,4 @@ const TrainerDatabase = require(process.cwd() + '/server/trainer/TrainerDatabase
 
 // MAIN METHOD
 let trainer = new Trainer();
+trainer.mainMenu();
