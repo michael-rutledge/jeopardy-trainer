@@ -6,7 +6,7 @@ const TrainerCategoryTrie = require(`${process.cwd()}/server/trainer/TrainerCate
 describe('TrainerCategoryTrieTest', function () {
   describe('constructor', function () {
     it('shouldGiveExpectedResultForEmptyInput', function () {
-      let tct = new TrainerCategoryTrie();
+      let tct = new TrainerCategoryTrie([]);
 
       expect(tct.trie.subcategory).to.be.null;
       expect(tct.trie.parent).to.be.null;
@@ -75,7 +75,7 @@ describe('TrainerCategoryTrieTest', function () {
 
   describe('insert', function () {
     it('shouldInsertCorrectlyAtRoot', function () {
-      let tct = new TrainerCategoryTrie();
+      let tct = new TrainerCategoryTrie([]);
 
       tct.insert('ARTS');
 
@@ -108,6 +108,28 @@ describe('TrainerCategoryTrieTest', function () {
       let childCategories = tct.getChildCategories('ARTS');
 
       childCategories.should.deep.equal(['ARTS::MUSIC', 'ARTS::PLAYS']);
+    });
+
+    it('shouldGiveTopLevelCategoriesForNoArgument', function () {
+      let tct = new TrainerCategoryTrie([
+        'ARTS', 'ARTS::MUSIC', 'ARTS::PLAYS', 'ARTS::PLAYS::SHAKESPEARE', 'SPORTS']);
+
+      let childCategories = tct.getChildCategories();
+
+      childCategories.should.deep.equal(['ARTS', 'SPORTS']);
+    });
+  });
+
+  describe('getRoot', function () {
+    it('shouldGiveExpectedResult', function () {
+      let tct = new TrainerCategoryTrie([
+        'ARTS', 'ARTS::MUSIC', 'ARTS::PLAYS', 'ARTS::PLAYS::SHAKESPEARE', 'SPORTS']);
+
+      let root = tct.getRoot();
+
+      expect(root.subcategory).to.be.null;
+      expect(root.parent).to.be.null;
+      Object.keys(root.children).length.should.equal(2);
     });
   });
 });
