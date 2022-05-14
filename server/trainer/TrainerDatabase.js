@@ -11,6 +11,7 @@ const RESULTS_TABLE = 'results';
 const ResultColumns = {
   ID: 'id',
   TRAINER_CATEGORY: 'trainer_category',
+  ROUND: 'round',
   CORRECT: 'correct',
   HEARD_OF: 'heard_of',
   DATE: 'date',
@@ -56,10 +57,11 @@ class TrainerDatabase {
 
   // Adds a result entry for the given arguments representing how a clue for a particular
   // trainerCategory went.
-  addResultEntry(trainerCategory, correct, heardOf) {
+  addResultEntry(trainerCategory, round, correct, heardOf) {
     try {
       let resultToInsert = {};
       resultToInsert[ResultColumns.TRAINER_CATEGORY] = trainerCategory;
+      resultToInsert[ResultColumns.ROUND] = round;
       resultToInsert[ResultColumns.CORRECT] = correct;
       resultToInsert[ResultColumns.HEARD_OF] = heardOf;
       resultToInsert[ResultColumns.DATE] = datetime.create().format('Y-m-d');
@@ -208,6 +210,7 @@ class TrainerDatabase {
           .createTable(RESULTS_TABLE, table => {
             table.increments(ResultColumns.ID);
             table.string(ResultColumns.TRAINER_CATEGORY);
+            table.string(ResultColumns.ROUND);
             table.integer(ResultColumns.CORRECT);
             table.integer(ResultColumns.HEARD_OF);
             table.string(ResultColumns.DATE);
