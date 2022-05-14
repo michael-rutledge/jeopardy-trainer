@@ -87,6 +87,7 @@ class TrainerDatabase {
     try {
       let query = knex(CLUES_TABLE)
         .distinct(ClueEntry.SqlColumns.TRAINER_CATEGORY)
+        .whereNotNull(ClueEntry.SqlColumns.TRAINER_CATEGORY)
         .toString();
       let rows = this.db.prepare(query).all();
       for (let i = 0; i < rows.length; ++i) {
