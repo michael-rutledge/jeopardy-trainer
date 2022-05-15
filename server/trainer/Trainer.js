@@ -23,16 +23,21 @@ class Trainer {
     let trainerCategory = null;
     let currentTrieNode = this.tct.getRoot();
     let doneString = 'Done (select this trainer category)';
+    let goBackString = 'Go back';
 
     do {
       let subNodes = Object.keys(currentTrieNode.children).map(
         key => currentTrieNode.children[key]);
+      // Child categories
       let subcategories = subNodes.map( subNode => subNode.subcategory );
       let followups = subcategories.map(subcategory =>
         (() => { return currentTrieNode.children[subcategory] }));
+      // Special cases
       if (currentTrieNode !== this.tct.getRoot()) {
         subcategories.unshift(doneString);
         followups.unshift(() => { return currentTrieNode });
+        subcategories.push(goBackString);
+        followups.push(() => { return currentTrieNode.parent });
       }
       let followup = await this._promptOneList('Select subcategory: ', subcategories, followups);
       let nextNode = followup();
