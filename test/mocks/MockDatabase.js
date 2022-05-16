@@ -1,3 +1,5 @@
+const AutoBuilder = require(`${process.cwd()}/server/utility/AutoBuilder.js`);
+
 // Mocks sqllite queries made by jeopardy-trainer.
 class MockDatabase {
   constructor () {
@@ -63,24 +65,5 @@ class MockDatabase {
   }
 }
 
-MockDatabase.Builder = class {
-  constructor () {
-    this._mockDatabase = new MockDatabase();
-  }
-
-  build() {
-    return this._mockDatabase;
-  }
-
-  setResultChain(resultChain) {
-    this._mockDatabase.resultChain = resultChain;
-    return this;
-  }
-
-  setErrorChain(errorChain) {
-    this._mockDatabase.errorChain = errorChain;
-    return this;
-  }
-};
-
 module.exports = MockDatabase;
+MockDatabase.Builder = AutoBuilder(MockDatabase);

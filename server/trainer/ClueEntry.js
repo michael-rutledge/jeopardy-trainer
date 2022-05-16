@@ -1,3 +1,5 @@
+const AutoBuilder = require(`${process.cwd()}/server/utility/AutoBuilder.js`);
+
 // Enum for possible rounds associated with when the clue was present in the game.
 const Round = {
   NONE: 'NONE',
@@ -50,61 +52,11 @@ class ClueEntry {
   }
 }
 
-// Constructs a new ClueEntry. Does not need to seed certain fields related to training.
-ClueEntry.Builder = class {
-  constructor () {
-    this._clueEntry = new ClueEntry();
-  }
-
-  build() {
-    return this._clueEntry;
-  }
-
-  setId(id) {
-    this._clueEntry.id = id;
-    return this;
-  }
-
-  setJCategory(jCategory) {
-    this._clueEntry.jCategory = jCategory;
-    return this;
-  }
-
-  setClue(clue) {
-    this._clueEntry.clue = clue;
-    return this;
-  }
-
-  setAnswer(answer) {
-    this._clueEntry.answer = answer;
-    return this;
-  }
-
-  setRound(round) {
-    this._clueEntry.round = round;
-    return this;
-  }
-
-  setDollarValue(dollarValue) {
-    this._clueEntry.dollarValue = dollarValue;
-    return this;
-  }
-
-  setAirDate(airDate) {
-    this._clueEntry.airDate = airDate;
-    return this;
-  }
-
-  setTrainerCategory(trainerCategory) {
-    this._clueEntry.trainerCategory = trainerCategory;
-    return this;
-  }
-
-  setClueType(clueType) {
-    this._clueEntry.clueType = clueType;
-    return this;
-  }
-}
+module.exports = ClueEntry;
+ClueEntry.Builder = AutoBuilder(ClueEntry);
+ClueEntry.ClueType = ClueType;
+ClueEntry.Round = Round;
+ClueEntry.SqlColumns = SqlColumns;
 
 // Returns a new ClueEntry from the given sql row JSON.
 ClueEntry.fromSqlRow = function(row) {
@@ -120,8 +72,3 @@ ClueEntry.fromSqlRow = function(row) {
     .setClueType(row[SqlColumns.CLUE_TYPE])
     .build();
 }
-
-module.exports = ClueEntry;
-ClueEntry.ClueType = ClueType;
-ClueEntry.Round = Round;
-ClueEntry.SqlColumns = SqlColumns;
