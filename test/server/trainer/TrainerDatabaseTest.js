@@ -1,9 +1,10 @@
 const expect = require('chai').expect;
 const should = require('chai').should();
 
-const ClueEntry = require(process.cwd() + '/server/trainer/ClueEntry.js');
-const MockDatabase = require(process.cwd() + '/test/mocks/MockDatabase.js');
-const TrainerDatabase = require(process.cwd() + '/server/trainer/TrainerDatabase.js');
+const CategoryResultsEntry = require(`${process.cwd()}/server/trainer/CategoryResultsEntry.js`);
+const ClueEntry = require(`${process.cwd()}/server/trainer/ClueEntry.js`);
+const MockDatabase = require(`${process.cwd()}/test/mocks/MockDatabase.js`);
+const TrainerDatabase = require(`${process.cwd()}/server/trainer/TrainerDatabase.js`);
 
 // A mock clue entry with valid data populated.
 const kValidClueEntry = new ClueEntry.Builder()
@@ -196,7 +197,7 @@ describe('TrainerDatabaseTest', function () {
         .setResultChain([[]])
         .setErrorChain([false])
         .build();
-        let trainerDb = new TrainerDatabase(mockDb);
+      let trainerDb = new TrainerDatabase(mockDb);
 
       let clueEntries = trainerDb.getClueEntriesForTrainerCategory(
         'trainerCategory', { offset: 10 });
@@ -215,6 +216,63 @@ describe('TrainerDatabaseTest', function () {
       let clueEntries = trainerDb.getClueEntriesForTrainerCategory('trainerCategory');
 
       clueEntries.should.be.empty;
+    });
+  });
+
+  describe('getResultsForTrainerCategory', function () {
+    it('shouldNotIncludeDateIfNotSpecified', function () {
+      let mockDb = new MockDatabase.Builder()
+        .setResultChain([[]])
+        .setErrorChain([false])
+        .build();
+      let trainerDb = new TrainerDatabase(mockDb);
+
+      trainerDb.getResultsForTrainerCategory('TRAINER_CATEGORY');
+
+      mockDb.runQueries.length.should.equal(1);
+      mockDb.runQueries[0].should.not.contain(`where ${TrainerDatabase.ResultColumns.DATE}`);
+    });
+
+    it('shouldIncludeDateIfSpecified', function () {
+      let mockDb = new MockDatabase.Builder()
+        .setResultChain([[]])
+        .setErrorChain([false])
+        .build();
+      let trainerDb = new TrainerDatabase(mockDb);
+
+      trainerDb.getResultsForTrainerCategory('TRAINER_CATEGORY', '2020-01-01');
+
+      mockDb.runQueries.length.should.equal(1);
+      mockDb.runQueries[0].should.contain(`${TrainerDatabase.ResultColumns.DATE}`);
+    });
+
+    it('shouldIncludeTrainerCategoryCheck', function () {
+      let mockDb = new MockDatabase.Builder()
+        .setResultChain([[]])
+        .setErrorChain([false])
+        .build();
+      let trainerDb = new TrainerDatabase(mockDb);
+
+      trainerDb.getResultsForTrainerCategory('TRAINER_CATEGORY');
+
+      mockDb.runQueries.length.should.equal(1);
+      mockDb.runQueries[0].should.contain(`TRAINER_CATEGORY%`);
+    });
+
+    it('shouldReturnExpectedCategoryResultsEntry', function () {
+      let categoryResultsRow = {};
+      categoryResultsRow[CategoryResultsEntry.SqlColumns.NUM_CORRECT] = 3;
+      categoryResultsRow[CategoryResultsEntry.SqlColumns.TOTAL_TIMES_ASKED] = 10;
+      let mockDb = new MockDatabase.Builder()
+        .setResultChain([categoryResultsRow])
+        .setErrorChain([false])
+        .build();
+      let trainerDb = new TrainerDatabase(mockDb);
+      let expected = CategoryResultsEntry.fromSqlRow('TRAINER_CATEGORY', categoryResultsRow);
+
+      let categoryResultsEntry = trainerDb.getResultsForTrainerCategory('TRAINER_CATEGORY');
+
+      categoryResultsEntry.should.deep.equal(expected);
     });
   });
 

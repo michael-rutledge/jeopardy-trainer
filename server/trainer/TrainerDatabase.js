@@ -1,8 +1,9 @@
 const sqlite3 = require('better-sqlite3');
 const datetime = require('node-datetime');
 
-const ClueEntry = require(process.cwd() + '/server/trainer/ClueEntry.js');
-const Logger = require(process.cwd() + '/server/utility/Logger.js');
+const CategoryResultsEntry = require(`${process.cwd()}/server/trainer/CategoryResultsEntry.js`);
+const ClueEntry = require(`${process.cwd()}/server/trainer/ClueEntry.js`);
+const Logger = require(`${process.cwd()}/server/utility/Logger.js`);
 
 const DB_PATH = process.cwd() + '/server/data/jeopardy-trainer.db';
 const CLUES_TABLE = 'clues';
@@ -162,6 +163,29 @@ class TrainerDatabase {
     return clueEntries;
   }
 
+  // Gets results for a given trainer category in the form of a CategoryResultsEntry.
+  getResultsForTrainerCategory(trainerCategory, startDate = null) {
+    try {
+      let selectData = {};
+      selectData[CategoryResultsEntry.SqlColumns.NUM_CORRECT] =
+        knex.raw(`sum(${ResultColumns.CORRECT})`);
+      selectData[CategoryResultsEntry.SqlColumns.TOTAL_TIMES_ASKED] = knex.raw(`count(*)`);
+      let resultsQuery = knex
+        .select(selectData)
+        .from(RESULTS_TABLE);
+      resultsQuery.where(knex.raw(`${ResultColumns.TRAINER_CATEGORY} like '${trainerCategory}%'`));
+      if (startDate) {
+        resultsQuery.where(knex.raw(`${ResultColumns.DATE} >= ${startDate}`))
+      }
+
+      // There should only be one row found, as this query is for one trainer category at a time
+      let categoryResultsRow = this.db.prepare(resultsQuery.toString()).get();
+      return CategoryResultsEntry.fromSqlRow(trainerCategory, categoryResultsRow);
+    } catch (err) {
+      Logger.logError(`TrainerDatabase failed to get results for trainerCategory: ${err.message}`);
+    }
+  }
+
   // Updates the row 
   setTrainerCategoryForClueEntry(trainerCategory, clueEntry) {
     try {
@@ -227,4 +251,5 @@ class TrainerDatabase {
 }
 
 module.exports = TrainerDatabase;
+TrainerDatabase.ResultColumns = ResultColumns;
 TrainerDatabase.DB_PATH = DB_PATH;
